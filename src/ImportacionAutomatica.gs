@@ -30,9 +30,9 @@ var IMP_COL_UBICACION = 0; // A
 var IMP_COL_PEDIDO    = 1; // B
 
 var ETIQUETAS_DIA_SNAPSHOT = [
-  "L","L1","L2","L3","LUNE","M","M1","M2","M3","MART",
+  "L","L1","L2","L3","LUNE","M","M1","M2","M3","MART","MARTE",
   "X","X1","X2","X3","MIER","MIÉR","J","J1","J2","J3","JUEV",
-  "V","V1","V2","V3","VIER","S","SABA"
+  "V","V1","V2","V3","VIER","S","SAB","SABA"
 ];
 
 // ==========================================

@@ -50,6 +50,7 @@ Con `true`, TODOS los correos (los 4 del jueves + dashboard + PC Total) se redir
 | `DASHBOARD.gs` | Todo el sistema de incidencias: panel visual + informes mensuales global/tienda + triggers del dashboard. (Renombrado desde `DashboardIncidencias.gs` — el archivo llevaba tiempo como `DASHBOARD` en el editor de Apps Script sin sincronizar; se alineó el nombre local el 2026-07-09.) |
 | `ImportacionAutomatica.gs` | Importación de Excel desde Drive, snapshot semanal, **orquestador del jueves**, diagnóstico, trigger jueves. |
 | `Utilidades.gs` | `getWeekNumber`, `limpiarHojasTiendas`. |
+| `CotejoHodos.gs` | `consultarEstadoHodos(numerosPedido)` — cruza pedidos contra HODOS (Supabase `dbxlrnupiwemnarlxmcv`, tablas `public.etiquetas`/`public.cargas`) para saber si un pedido está Creado / Enviado / Enviado (camión cerrado) / **Recepcionado por tienda** / Sin registro. Usado en `enviarCorreoRevisionTienda` (columna "Estado HODOS"). Requiere propiedad de script `SUPABASE_SERVICE_KEY` (legacy JWT de service_role, NO la `sb_secret_` nueva — bloquea `UrlFetchApp`, ver gotcha en memoria). HODOS no tiene un estado explícito de "recepcionado" — se DERIVA: carga `CERRADA` + ya ha pasado `fecha_entrega`+`horario` (la hora que Pedro marca como recepción prevista) ⇒ Recepcionado por tienda; si aún no ha pasado esa hora, se queda en "Enviado (camión cerrado)". `diagnosticarCotejoHodos()` para probar la conexión a mano. |
 | `appsscript.json` | Manifiesto. **Drive API v3 activada** (necesaria para convertir los .xlsx). |
 
 ---
@@ -88,7 +89,7 @@ Volcado directo de los Excel. Columnas usadas por el código (índice 0-based):
 - **Col J (9)** = Importe €
 - **Col L (11)** = Fecha
 
-`DIRECCIONES` = pestaña con la lista de ubicaciones que cuentan como "plataforma" (col A).
+`DIRECCIONES` = pestaña con ubicaciones EXTRA que cuentan como "plataforma" (col A). Desde 2026-10-14 ya no es la única fuente: ver regla #9.
 
 ---
 
@@ -125,6 +126,12 @@ Igual que la regla X/J del equipo (#1), pero para el lado tienda: los prefijos d
 - Memoria en hoja **propia y separada** `SNAPSHOT_UBICAR_TIENDAS` (NO comparte hoja con `SNAPSHOT_SEMANAL` del equipo) — `leerSnapshotTiendasUbicarAnterior()` / `guardarSnapshotTiendasUbicar()` en `ImportacionAutomatica.gs`.
 - En `ejecutarAuditoriaCompleta`, estas líneas destacadas se escriben en `Revision_tienda` bajo la cabecera `"ARRASTRE UBICAR: <tienda>"` (distinta de `"REVISIÓN POR UBICAR: <tienda>"`).
 - El guardado del snapshot (paso 9 del jueves) se omite si falló la importación o la auditoría, igual que el snapshot del equipo (paso 8).
+
+### 9. Qué es "ubicación de plataforma" — regla automática (2026-10-14)
+Antes solo contaba lo escrito en `DIRECCIONES` (lista manual que se quedaba corta: ubicaciones nuevas como 24000, 25148 o X234A no sumaban y los totales salían más bajos que los reales). Ahora `esUbicacionPlataforma_(dir, setExtra)` (en `Configuracion.gs`) da `true` si la ubicación: (1) es solo numérica, (2) empieza por X, (3) es etiqueta de día (`ETIQUETAS_RETRASO_DIRECTO` L,M,V,S y variantes LUNE/MART/MARTE/VIER/SAB/SABA + `ETIQUETAS_RETRASO_CONDICIONAL` X,J y variantes MIER/MIÉR/JUEV), o (4) está en `DIRECCIONES` (casos especiales: `1412A`, `VJ279`...). Lo usan `ejecutarAuditoriaCompleta` y `generarResumenMensualPlataforma`.
+- Las listas de etiquetas de día viven SOLO en `Configuracion.gs` (la regla de retraso X/J de la #1 no cambia). `ETIQUETAS_DIA_SNAPSHOT` en `ImportacionAutomatica.gs` debe mantenerse alineada.
+- TOR / VALEN / ANTEQ (regla #7) NO son plataforma: siguen yendo aparte a "Arrastres".
+- La auditoría deja en el log (`Logger.log`) las ubicaciones contadas por regla que no están en `DIRECCIONES`.
 
 ---
 

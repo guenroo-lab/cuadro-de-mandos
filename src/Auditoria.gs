@@ -5,17 +5,18 @@
 function ejecutarAuditoriaCompleta() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var tiendas = ["MARBELLA", "MALAGA", "GRANADA", "MIJAS"];
-  var hojaDirecciones = ss.getSheetByName("DIRECCIONES");
   var hojaResumen = ss.getSheetByName("RESUMEN_SEMANAL") || ss.insertSheet("RESUMEN_SEMANAL");
   var hojaRevision = ss.getSheetByName("Revision_tienda") || ss.insertSheet("Revision_tienda");
   var hojaRetrasos = ss.getSheetByName("RETRASOS_EQUIPO") || ss.insertSheet("RETRASOS_EQUIPO");
 
-  var setPlataforma = new Set(hojaDirecciones.getRange("A:A").getValues().flat().filter(String).map(d => d.toString().trim().toUpperCase()));
-  var etiquetasRetraso = ["L","L1","L2","L3","LUNE","M","M1","M2","M3","MART","V","V1","V2","V3","VIER","S","SABA"];
+  // Plataforma = regla automática (numéricas, X..., etiquetas de día) + lo escrito en DIRECCIONES.
+  var setExtra = cargarDireccionesExtra_(ss);
+  var sinLista = {}; // ubicaciones de plataforma por regla que NO están en DIRECCIONES (solo informativo)
+  var etiquetasRetraso = ETIQUETAS_RETRASO_DIRECTO;
 
   // Retraso CONDICIONAL (X/J): solo cuenta si el pedido ya estaba
   // en esa ubicación la semana anterior (según snapshot SNAPSHOT_SEMANAL).
-  var etiquetasRetrasoCondicional = ["X","X1","X2","X3","MIER","MIÉR","J","J1","J2","J3","JUEV"];
+  var etiquetasRetrasoCondicional = ETIQUETAS_RETRASO_CONDICIONAL;
   var snapshotAnterior = leerSnapshotAnterior();
   // Memoria de líneas "por ubicar" de tienda (VX/VJ/TX/TJ/AX/AJ) de la semana
   // anterior, para saber cuáles ya llevan 2 semanas sin moverse.
@@ -62,7 +63,8 @@ function ejecutarAuditoriaCompleta() {
       // aviso inmediato al equipo, sin memoria de semana anterior.
       if (UBICACIONES_TRANSITORIAS_PLATAFORMA.indexOf(dir) !== -1) lineasArrastre.push(fila);
 
-      if (setPlataforma.has(dir)) {
+      if (esUbicacionPlataforma_(dir, setExtra)) {
+        if (!setExtra.has(dir)) sinLista[dir] = (sinLista[dir] || 0) + 1;
         var sec = fila[2] || "S/N", price = parseFloat(fila[9]) || 0;
         if (!secciones[sec]) secciones[sec] = { p: new Set(), u: new Set(), d: 0, l: 0 };
         secciones[sec].p.add(id); secciones[sec].u.add(dir); secciones[sec].d += price; secciones[sec].l++;
@@ -122,6 +124,9 @@ function ejecutarAuditoriaCompleta() {
       filaRet += lineasArrastre.length + 2;
     }
   });
+
+  var nSinLista = Object.keys(sinLista).length;
+  if (nSinLista > 0) Logger.log("Ubicaciones de plataforma contadas por regla y NO escritas en DIRECCIONES (" + nSinLista + "): " + Object.keys(sinLista).sort().join(", "));
 
   hojaResumen.getRange("E:E").setNumberFormat("#,##0€");
   hojaResumen.getRange("K:K").setNumberFormat("#,##0€");

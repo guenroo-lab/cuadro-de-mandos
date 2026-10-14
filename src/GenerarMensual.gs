@@ -5,7 +5,6 @@
 function generarResumenMensualPlataforma() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var tiendas = ["MARBELLA", "MALAGA", "GRANADA", "MIJAS"];
-  var hojaD = ss.getSheetByName("DIRECCIONES");
   var hojaR = ss.getSheetByName("RESUMEN_PEDIDO_MESES") || ss.insertSheet("RESUMEN_PEDIDO_MESES");
 
   var hoyReal = new Date(); hoyReal.setHours(0,0,0,0); // fecha real de hoy, para medir DÍAS de demora
@@ -16,7 +15,7 @@ function generarResumenMensualPlataforma() {
 
   ss.getSheets().forEach(h => { if(h.getName().startsWith("DATA_RET_")) ss.deleteSheet(h); });
 
-  var setP = new Set(hojaD.getRange("A:A").getValues().flat().filter(String).map(d => d.toString().trim().toUpperCase()));
+  var setP = cargarDireccionesExtra_(ss); // complemento manual; la regla automática la aplica esUbicacionPlataforma_
   var filaA = 1;
 
   tiendas.forEach(function(nT) {
@@ -31,7 +30,7 @@ function generarResumenMensualPlataforma() {
 
     for (var i = 1; i < data.length; i++) {
       var f = data[i]; var d = f[0].toString().trim().toUpperCase();
-      if (setP.has(d)) {
+      if (esUbicacionPlataforma_(d, setP)) {
         var id = f[1], sec = f[2] || "S/N", imp = parseFloat(f[9])||0, fec = f[11];
         if (fec instanceof Date && !isNaN(fec)) {
           var cM = Utilities.formatDate(fec, ss.getSpreadsheetTimeZone(), "yyyy-MM");

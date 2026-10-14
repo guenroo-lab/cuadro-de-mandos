@@ -39,6 +39,47 @@ var PREFIJOS_ORIGEN_TIENDA = ["VL","VM","VX","VJ","VV","TL","TM","TX","TJ","TV",
 // SNAPSHOT_UBICAR_TIENDAS). Mismo criterio de 24h que usa el equipo para X/J.
 var PREFIJOS_ORIGEN_TIENDA_EXCLUIR_XJ = ["VX","VJ","TX","TJ","AX","AJ"];
 
+// ==========================================
+// UBICACIONES DE PLATAFORMA — regla automática (ya no depende solo de DIRECCIONES)
+// ==========================================
+// Una ubicación es de plataforma si cumple CUALQUIERA de estas:
+//   1. Es solo numérica (ej. 24000, 1412)
+//   2. Empieza por X (ej. X234A, X, X1)
+//   3. Es una etiqueta de día (L,M,X,J,V,S y variantes: LUNE, MART, MARTE, MIER, JUEV, VIER, SAB...)
+//   4. Está escrita en la pestaña DIRECCIONES (sigue valiendo para casos especiales, ej. 1412A, VJ279)
+// Las transitorias (TOR / VALEN / ANTEQ) NO son plataforma: se avisan aparte como "Arrastres".
+
+// Retraso DIRECTO: siempre cuenta como retraso.
+var ETIQUETAS_RETRASO_DIRECTO = [
+  "L","L1","L2","L3","LUNE",
+  "M","M1","M2","M3","MART","MARTE",
+  "V","V1","V2","V3","VIER",
+  "S","SAB","SABA"
+];
+// Retraso CONDICIONAL (X/J): solo cuenta si el pedido ya estaba ahí la semana anterior.
+var ETIQUETAS_RETRASO_CONDICIONAL = [
+  "X","X1","X2","X3","MIER","MIÉR",
+  "J","J1","J2","J3","JUEV"
+];
+
+// Lee la pestaña DIRECCIONES (complemento manual). Si no existe, devuelve un set vacío.
+function cargarDireccionesExtra_(ss) {
+  var hoja = ss.getSheetByName("DIRECCIONES");
+  if (!hoja) return new Set();
+  return new Set(hoja.getRange("A:A").getValues().flat().filter(String)
+    .map(function(d){ return d.toString().trim().toUpperCase(); }));
+}
+
+// ¿Esta ubicación (ya en mayúsculas y sin espacios) es de plataforma?
+function esUbicacionPlataforma_(dir, setExtra) {
+  if (!dir) return false;
+  if (/^\d+$/.test(dir)) return true;
+  if (dir.charAt(0) === "X") return true;
+  if (ETIQUETAS_RETRASO_DIRECTO.indexOf(dir) !== -1) return true;
+  if (ETIQUETAS_RETRASO_CONDICIONAL.indexOf(dir) !== -1) return true;
+  return setExtra.has(dir);
+}
+
 var MESES_ES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 var NOMBRES_MESES_COMPLETOS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio",
                                "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
