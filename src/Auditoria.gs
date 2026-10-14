@@ -12,11 +12,10 @@ function ejecutarAuditoriaCompleta() {
   // Plataforma = regla automática (numéricas, X..., etiquetas de día) + lo escrito en DIRECCIONES.
   var setExtra = cargarDireccionesExtra_(ss);
   var sinLista = {}; // ubicaciones de plataforma por regla que NO están en DIRECCIONES (solo informativo)
-  var etiquetasRetraso = ETIQUETAS_RETRASO_DIRECTO;
-
-  // Retraso CONDICIONAL (X/J): solo cuenta si el pedido ya estaba
-  // en esa ubicación la semana anterior (según snapshot SNAPSHOT_SEMANAL).
-  var etiquetasRetrasoCondicional = ETIQUETAS_RETRASO_CONDICIONAL;
+  // Retraso DIRECTO / CONDICIONAL (X/J: solo si el pedido ya estaba en esa
+  // ubicación la semana anterior, según SNAPSHOT_SEMANAL): ver
+  // esEtiquetaRetrasoDirecto_ / esEtiquetaRetrasoCondicional_ en Configuracion.gs
+  // (aceptan L1, L2, L12... cualquier número tras la letra).
   var snapshotAnterior = leerSnapshotAnterior();
   // Memoria de líneas "por ubicar" de tienda (VX/VJ/TX/TJ/AX/AJ) de la semana
   // anterior, para saber cuáles ya llevan 2 semanas sin moverse.
@@ -70,9 +69,9 @@ function ejecutarAuditoriaCompleta() {
         secciones[sec].p.add(id); secciones[sec].u.add(dir); secciones[sec].d += price; secciones[sec].l++;
         stats.p.add(id); stats.u.add(dir); stats.d += price; stats.l++;
 
-        if (etiquetasRetraso.includes(dir)) {
+        if (esEtiquetaRetrasoDirecto_(dir)) {
           lineasRet.push(fila);
-        } else if (etiquetasRetrasoCondicional.includes(dir)) {
+        } else if (esEtiquetaRetrasoCondicional_(dir)) {
           if (snapshotAnterior[claveSnap(nombre, dir, id)]) lineasRet.push(fila);
         }
       }

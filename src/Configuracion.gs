@@ -62,6 +62,18 @@ var ETIQUETAS_RETRASO_CONDICIONAL = [
   "J","J1","J2","J3","JUEV"
 ];
 
+// Las etiquetas de día admiten CUALQUIER número detrás de la letra (L1, L2, L12, M3, X7, J4...):
+// letra + dígitos, además de los nombres completos de las listas de arriba.
+function esEtiquetaRetrasoDirecto_(dir) {
+  return ETIQUETAS_RETRASO_DIRECTO.indexOf(dir) !== -1 || /^[LMVS]\d+$/.test(dir);
+}
+function esEtiquetaRetrasoCondicional_(dir) {
+  return ETIQUETAS_RETRASO_CONDICIONAL.indexOf(dir) !== -1 || /^[XJ]\d+$/.test(dir);
+}
+function esEtiquetaDia_(dir) {
+  return esEtiquetaRetrasoDirecto_(dir) || esEtiquetaRetrasoCondicional_(dir);
+}
+
 // Lee la pestaña DIRECCIONES (complemento manual). Si no existe, devuelve un set vacío.
 function cargarDireccionesExtra_(ss) {
   var hoja = ss.getSheetByName("DIRECCIONES");
@@ -75,8 +87,7 @@ function esUbicacionPlataforma_(dir, setExtra) {
   if (!dir) return false;
   if (/^\d+$/.test(dir)) return true;
   if (dir.charAt(0) === "X") return true;
-  if (ETIQUETAS_RETRASO_DIRECTO.indexOf(dir) !== -1) return true;
-  if (ETIQUETAS_RETRASO_CONDICIONAL.indexOf(dir) !== -1) return true;
+  if (esEtiquetaDia_(dir)) return true;
   return setExtra.has(dir);
 }
 

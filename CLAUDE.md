@@ -129,7 +129,7 @@ Igual que la regla X/J del equipo (#1), pero para el lado tienda: los prefijos d
 
 ### 9. Qué es "ubicación de plataforma" — regla automática (2026-10-14)
 Antes solo contaba lo escrito en `DIRECCIONES` (lista manual que se quedaba corta: ubicaciones nuevas como 24000, 25148 o X234A no sumaban y los totales salían más bajos que los reales). Ahora `esUbicacionPlataforma_(dir, setExtra)` (en `Configuracion.gs`) da `true` si la ubicación: (1) es solo numérica, (2) empieza por X, (3) es etiqueta de día (`ETIQUETAS_RETRASO_DIRECTO` L,M,V,S y variantes LUNE/MART/MARTE/VIER/SAB/SABA + `ETIQUETAS_RETRASO_CONDICIONAL` X,J y variantes MIER/MIÉR/JUEV), o (4) está en `DIRECCIONES` (casos especiales: `1412A`, `VJ279`...). Lo usan `ejecutarAuditoriaCompleta` y `generarResumenMensualPlataforma`.
-- Las listas de etiquetas de día viven SOLO en `Configuracion.gs` (la regla de retraso X/J de la #1 no cambia). `ETIQUETAS_DIA_SNAPSHOT` en `ImportacionAutomatica.gs` debe mantenerse alineada.
+- Las etiquetas de día viven SOLO en `Configuracion.gs` (la regla de retraso X/J de la #1 no cambia): `esEtiquetaRetrasoDirecto_` (L,M,V,S + variantes), `esEtiquetaRetrasoCondicional_` (X,J + variantes) y `esEtiquetaDia_` (ambas, usada también por el snapshot). Aceptan **letra + cualquier número** (L1, L2, L12, X7, J4...) además de los nombres (LUNE, MART, MARTE, MIER, JUEV, VIER, SAB, SABA).
 - TOR / VALEN / ANTEQ (regla #7) NO son plataforma: siguen yendo aparte a "Arrastres".
 - La auditoría deja en el log (`Logger.log`) las ubicaciones contadas por regla que no están en `DIRECCIONES`.
 

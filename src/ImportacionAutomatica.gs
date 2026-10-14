@@ -29,11 +29,7 @@ var SNAPSHOT_UBICAR_TIENDAS_HOJA = "SNAPSHOT_UBICAR_TIENDAS";
 var IMP_COL_UBICACION = 0; // A
 var IMP_COL_PEDIDO    = 1; // B
 
-var ETIQUETAS_DIA_SNAPSHOT = [
-  "L","L1","L2","L3","LUNE","M","M1","M2","M3","MART","MARTE",
-  "X","X1","X2","X3","MIER","MIÉR","J","J1","J2","J3","JUEV",
-  "V","V1","V2","V3","VIER","S","SAB","SABA"
-];
+// Las etiquetas de día (L,M,X,J,V,S + número) se definen en Configuracion.gs (esEtiquetaDia_).
 
 // ==========================================
 // ORQUESTADOR — cada JUEVES 12:00
@@ -179,8 +175,6 @@ function guardarSnapshotSemanal() {
   hoja.appendRow(["Tienda", "Ubicacion", "Pedido", "FechaSnapshot"]);
 
   var hoyStr = Utilities.formatDate(new Date(), ss.getSpreadsheetTimeZone(), "dd/MM/yyyy");
-  var diaSet = {};
-  ETIQUETAS_DIA_SNAPSHOT.forEach(function(e){ diaSet[e] = true; });
 
   var filas = [];
   CODIGOS_TIENDA_ORDEN.forEach(function(codigo) {
@@ -192,7 +186,7 @@ function guardarSnapshotSemanal() {
       var ubic = (data[i][IMP_COL_UBICACION] || "").toString().trim().toUpperCase();
       var ped  = data[i][IMP_COL_PEDIDO];
       if (!ubic || !ped) continue;
-      if (diaSet[ubic]) filas.push([nombreTienda, ubic, ped, hoyStr]);
+      if (esEtiquetaDia_(ubic)) filas.push([nombreTienda, ubic, ped, hoyStr]);
     }
   });
 
